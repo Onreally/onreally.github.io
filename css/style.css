@@ -146,12 +146,11 @@ video {
   display: flex;
   gap: 20px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: nowrap;
-  width: max-content;
+  width: auto;
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  padding-inline: calc((100% - clamp(220px, 62vw, 380px)) / 2);
 }
 
 .carousel-slide {
@@ -290,12 +289,11 @@ video {
   display: flex;
   gap: 20px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: nowrap;
-  width: max-content;
+  width: auto;
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  padding-inline: calc((100% - clamp(260px, 78vw, 760px)) / 2);
 }
 
 .review-slide {
@@ -506,7 +504,6 @@ video {
 
   .carousel-track {
     gap: 12px;
-    padding-inline: calc((100% - clamp(250px, 86vw, 520px)) / 2);
   }
 
   .carousel-slide {
@@ -558,7 +555,6 @@ video {
 
   .reviews-track {
     gap: 12px;
-    padding-inline: calc((100% - clamp(250px, 86vw, 520px)) / 2);
   }
 
   .review-slide-image {

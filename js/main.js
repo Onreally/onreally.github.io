@@ -1,8 +1,10 @@
-gsap.from(".hero-text", {
-  opacity: 0,
-  y: 40,
-  duration: 1.25
-});
+if (window.gsap) {
+  gsap.from(".hero-text", {
+    opacity: 0,
+    y: 40,
+    duration: 1.25
+  });
+}
 
 function addSwipeNavigation(element, onSwipeLeft, onSwipeRight, threshold = 60) {
   if (!element) return;
@@ -110,7 +112,7 @@ function initMobileServicesAnimation() {
   console.log('Инициализация анимации для мобильных');
   
   // Регистрируем плагин ScrollTrigger
-  if (typeof ScrollTrigger !== 'undefined') {
+  if (window.gsap && typeof ScrollTrigger !== 'undefined') {
     gsap.registerPlugin(ScrollTrigger);
     
     // Очищаем старые триггеры если они есть
@@ -220,6 +222,36 @@ function initInfiniteSnapCarousel({
     slideStep = slideWidth + getGap();
   }
 
+  function getMaxOffset() {
+    return Math.max(0, track.scrollWidth - viewport.clientWidth);
+  }
+
+  function getSlideTarget(index) {
+    const slide = allSlides[clampLoopIndex(index)];
+    if (!slide) return 0;
+
+    const slideWidth = slide.getBoundingClientRect().width;
+    const viewportWidth = viewport.clientWidth;
+    const centeredOffset = slide.offsetLeft - ((viewportWidth - slideWidth) / 2);
+
+    return Math.max(0, Math.min(centeredOffset, getMaxOffset()));
+  }
+
+  function getClosestIndex(offset) {
+    let closestIndex = currentIndex;
+    let closestDistance = Infinity;
+
+    allSlides.forEach((slide, index) => {
+      const distance = Math.abs(getSlideTarget(index) - offset);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    return closestIndex;
+  }
+
   function updateActiveSlide() {
     const logicalIndex = getLogicalIndex(currentIndex);
 
@@ -243,26 +275,7 @@ function initInfiniteSnapCarousel({
   }
 
   function render(offset, animate = false, onComplete = null) {
-    const target = Math.max(0, Math.min(offset, slideStep * getMaxIndex()));
-
-    if (window.gsap) {
-      gsap.killTweensOf(track);
-      if (animate) {
-        gsap.to(track, {
-          x: -target,
-          duration: 0.55,
-          ease: "power3.out",
-          overwrite: true,
-          onComplete: () => {
-            if (typeof onComplete === 'function') onComplete();
-          }
-        });
-      } else {
-        gsap.set(track, { x: -target });
-        if (typeof onComplete === 'function') onComplete();
-      }
-      return;
-    }
+    const target = Math.max(0, Math.min(offset, getMaxOffset()));
 
     track.style.transition = animate ? 'transform 550ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
     track.style.transform = `translate3d(${-target}px, 0, 0)`;
@@ -279,18 +292,18 @@ function initInfiniteSnapCarousel({
     if (realCount <= 1) return;
     if (currentIndex === 0) {
       currentIndex = realCount;
-      dragOffset = currentIndex * slideStep;
+      dragOffset = getSlideTarget(currentIndex);
       render(dragOffset, false);
     } else if (currentIndex === realCount + 1) {
       currentIndex = 1;
-      dragOffset = currentIndex * slideStep;
+      dragOffset = getSlideTarget(currentIndex);
       render(dragOffset, false);
     }
   }
 
   function snapTo(index, animate = true) {
     currentIndex = realCount > 1 ? clampLoopIndex(index) : 0;
-    dragOffset = currentIndex * slideStep;
+    dragOffset = getSlideTarget(currentIndex);
     updateActiveSlide();
     render(dragOffset, animate, () => {
       normalizeLoopPosition();
@@ -299,8 +312,7 @@ function initInfiniteSnapCarousel({
   }
 
   function settleToClosest() {
-    const rawIndex = slideStep > 0 ? Math.round(dragOffset / slideStep) : currentIndex;
-    snapTo(rawIndex, true);
+    snapTo(getClosestIndex(dragOffset), true);
   }
 
   function onPointerDown(event) {
@@ -314,11 +326,13 @@ function initInfiniteSnapCarousel({
     isDragging = false;
     dragStartX = event.clientX;
     dragStartY = event.clientY;
-    dragStartOffset = currentIndex * slideStep;
+    dragStartOffset = getSlideTarget(currentIndex);
     dragOffset = dragStartOffset;
     track.style.willChange = 'transform';
     track.style.transition = 'none';
-    viewport.setPointerCapture(event.pointerId);
+    if (viewport.setPointerCapture) {
+      viewport.setPointerCapture(event.pointerId);
+    }
   }
 
   function onPointerMove(event) {
@@ -336,7 +350,7 @@ function initInfiniteSnapCarousel({
 
     const projected = dragStartOffset - deltaX;
     const minOffset = 0;
-    const maxOffset = slideStep * getMaxIndex();
+    const maxOffset = getMaxOffset();
     let nextOffset = projected;
 
     if (nextOffset < minOffset) {
@@ -353,7 +367,7 @@ function initInfiniteSnapCarousel({
     if (activePointerId !== event.pointerId) return;
     activePointerId = null;
 
-    if (viewport.hasPointerCapture(event.pointerId)) {
+    if (viewport.hasPointerCapture && viewport.hasPointerCapture(event.pointerId)) {
       viewport.releasePointerCapture(event.pointerId);
     }
 
@@ -407,6 +421,16 @@ function initInfiniteSnapCarousel({
 
   measure();
   snapTo(currentIndex, false);
+
+  window.setTimeout(() => {
+    measure();
+    snapTo(currentIndex, false);
+  }, 0);
+
+  window.addEventListener('load', () => {
+    measure();
+    snapTo(currentIndex, false);
+  });
 }
 
 // Функция для видео-карусели
