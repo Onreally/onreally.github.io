@@ -169,7 +169,6 @@ function initInfiniteSnapCarousel({
   if (!viewport || !track) return;
 
   const baseSlides = Array.from(track.querySelectorAll(slideSelector));
-  const mediaNodes = mediaSelector ? Array.from(track.querySelectorAll(mediaSelector)) : [];
   if (baseSlides.length === 0) return;
 
   if (baseSlides.length > 1) {
@@ -182,6 +181,7 @@ function initInfiniteSnapCarousel({
   }
 
   const allSlides = Array.from(track.querySelectorAll(slideSelector));
+  const mediaNodes = mediaSelector ? Array.from(track.querySelectorAll(mediaSelector)) : [];
   const realCount = baseSlides.length;
   let currentIndex = realCount > 1 ? 1 : 0;
   let slideStep = 0;

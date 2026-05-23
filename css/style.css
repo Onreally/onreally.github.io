@@ -110,6 +110,12 @@ video {
   justify-self: end; /* Выравниваем картинку по правой стороне своей ячейки */
 }
 
+@media (min-width: 933px) {
+  .about-nowrap {
+    white-space: nowrap;
+  }
+}
+
 .carousel {
   display: flex;
   align-items: center;
